@@ -1,18 +1,23 @@
 const express = require('express');
 const mongoose = require('mongoose');
-require('dotenv').config();
+const cors = require('cors');
+const dotenv = require('dotenv');
 
 const authRoutes = require('./routes/auth');
-const todoRoutes = require('./routes/todos');
+const todoRoutes = require('./routes/todo');
+
+dotenv.config();
 
 const app = express();
-
+app.use(cors({
+  origin: 'http://localhost:4200',
+}));
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('Could not connect to MongoDB...', err));
+mongoose.connect('mongodb://localhost:9000/todo-app', { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB connected successfully.'))
+  .catch((err) => console.error('Could not connect to MongoDB...', err));
 
 // Use routes
 app.use('/api/auth', authRoutes);   // Authentication routes
