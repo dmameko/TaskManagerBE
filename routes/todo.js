@@ -5,7 +5,6 @@ require('dotenv').config();
 
 const router = express.Router();
 
-// Middleware to verify JWT
 function verifyToken(req, res, next) {
   const token = req.headers['authorization'];
 
@@ -20,39 +19,49 @@ function verifyToken(req, res, next) {
   }
 }
 
-// Create a new todo
 router.post('/', verifyToken, async (req, res) => {
-  const { text } = req.body;
+  const { title } = req.body;
   const todo = new Todo({
-    text,
-    userId: req.user.userId // Associate todo with the logged-in user
+    title,
+    userId: req.user.userId
   });
 
-  await todo.save();
-  res.status(201).json(todo);
+  try {
+    await todo.save();
+    res.status(201).json(todo);
+  } catch (error) {
+    res.status(400).json({ message: 'Error creating todo', error });
+  }
 });
 
-// Get all todos for the authenticated user
 router.get('/', verifyToken, async (req, res) => {
   const todos = await Todo.find({ userId: req.user.userId });
   res.json(todos);
 });
 
-// Update a todo item
-router.put('/:id', verifyToken, async (req, res) => {
-  const { text, completed } = req.body;
-  const todo = await Todo.findOneAndUpdate(
-    { _id: req.params.id, userId: req.user.userId },
-    { text, completed },
-    { new: true }
-  );
+router.put('/:id/active', verifyToken, async (req, res) => {
+  const { active } = req.body;
 
-  if (!todo) return res.status(404).json({ message: 'Todo not found or you do not have permission.' });
+  if (active === undefined) {
+    return res.status(400).json({ message: 'Active status is required.' });
+  }
 
-  res.json(todo);
+  try {
+    const todo = await Todo.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.userId },
+      { active },
+    );
+
+    if (!todo) {
+      return res.status(404).json({ message: 'Todo not found or you do not have permission to update.' });
+    }
+
+    res.json(todo);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating todo.', error });
+  }
 });
 
-// Delete a todo item
 router.delete('/:id', verifyToken, async (req, res) => {
   const todo = await Todo.findOneAndDelete({ _id: req.params.id, userId: req.user.userId });
 

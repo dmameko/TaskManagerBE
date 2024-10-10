@@ -14,14 +14,12 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Connect to MongoDB
 mongoose.connect('mongodb://localhost:9000/todo-app', { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected successfully.'))
   .catch((err) => console.error('Could not connect to MongoDB...', err));
 
-// Use routes
-app.use('/api/auth', authRoutes);   // Authentication routes
-app.use('/api/todos', todoRoutes);  // Todo routes
+app.use('/api/auth', authRoutes);
+app.use('/api/todos', todoRoutes);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
